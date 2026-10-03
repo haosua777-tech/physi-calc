@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhysiCalc - Trợ lý tính Vật lí</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:linear-gradient(135deg,#eef4ff,#f7f9fc);color:#172033;
+}
+.app{max-width:1000px;margin:auto;padding:18px}
+.header{
+  background:linear-gradient(135deg,#2563eb,#7c3aed);color:white;border-radius:24px;
+  padding:24px;box-shadow:0 14px 35px #3154a52b;margin-bottom:18px
+}
+.header h1{margin:0 0 7px;font-size:30px}.header p{margin:0;opacity:.9}
+.grid{display:grid;grid-template-columns:280px 1fr;gap:18px}
+.card{background:#fff;border:1px solid #e7eaf0;border-radius:20px;padding:18px;box-shadow:0 8px 25px #1720330b}
+h2{font-size:18px;margin:0 0 14px}
+.subject-btn{
+  width:100%;text-align:left;border:0;background:#f4f6fa;color:#263044;
+  padding:13px 14px;border-radius:13px;margin:5px 0;cursor:pointer;font-size:15px;
+}
+.subject-btn.active{background:#e9efff;color:#1856d9;font-weight:700}
+label{display:block;font-size:14px;font-weight:650;margin:12px 0 6px}
+input,select{
+  width:100%;padding:12px 13px;border:1px solid #d9deea;border-radius:12px;
+  outline:none;font-size:15px;background:#fff
+}
+input:focus,select:focus{border-color:#4778ef;box-shadow:0 0 0 3px #4778ef1c}
+button.calc{
+  width:100%;margin-top:16px;padding:13px;border:0;border-radius:13px;
+  background:#2563eb;color:#fff;font-size:16px;font-weight:700;cursor:pointer
+}
+button.calc:hover{filter:brightness(.95)}
+.result{
+  margin-top:16px;padding:17px;border-radius:16px;background:#f6f9ff;border:1px solid #dce7ff;
+}
+.result .value{font-size:26px;font-weight:800;color:#1557d6;margin:5px 0 10px}
+.formula{background:#fff;border-radius:12px;padding:12px;font-family:ui-monospace,monospace;color:#334155}
+.error{color:#b42318;background:#fff1f0;border-color:#ffd2cf}
+.note{font-size:13px;color:#667085;line-height:1.5}
+.footer{text-align:center;color:#7a8498;font-size:13px;padding:18px}
+@media(max-width:750px){.grid{grid-template-columns:1fr}.header h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <h1>⚡ PhysiCalc</h1>
+  <p>Trợ lý tính toán Vật lí cho học sinh — nhập dữ kiện, chọn đại lượng cần tìm và nhận kết quả.</p>
+</header>
+
+<div class="grid">
+  <aside class="card">
+    <h2>📚 Dạng bài</h2>
+    <button class="subject-btn active" onclick="selectType('motion',this)">🚗 Chuyển động thẳng</button>
+    <button class="subject-btn" onclick="selectType('newton',this)">🧲 Định luật II Newton</button>
+    <button class="subject-btn" onclick="selectType('ohm',this)">💡 Định luật Ôm</button>
+    <button class="subject-btn" onclick="selectType('power',this)">🔋 Công suất điện</button>
+    <button class="subject-btn" onclick="selectType('work',this)">⚙️ Công – công suất cơ</button>
+    <button class="subject-btn" onclick="selectType('density',this)">🧊 Khối lượng riêng</button>
+    <button class="subject-btn" onclick="selectType('pressure',this)">🌊 Áp suất</button>
+    <button class="subject-btn" onclick="selectType('kinetic',this)">🏃 Động năng</button>
+    <button class="subject-btn" onclick="selectType('potential',this)">📐 Thế năng trọng trường</button>
+    <button class="subject-btn" onclick="selectType('coulomb',this)">⚡ Lực Coulomb</button>
+  </aside>
+
+  <main class="card">
+    <h2 id="title">🚗 Chuyển động thẳng</h2>
+    <p class="note" id="description">Tính vận tốc, quãng đường hoặc thời gian theo công thức v = s/t.</p>
+    <div id="form"></div>
+    <button class="calc" onclick="calculate()">🧮 Tính kết quả</button>
+    <div id="result" class="result" style="display:none"></div>
+  </main>
+</div>
+<div class="footer">PhysiCalc • Công cụ hỗ trợ học tập • Hãy kiểm tra đơn vị trước khi tính.</div>
+</div>
+
+<script>
+const data={
+ motion:{
+  title:"🚗 Chuyển động thẳng",desc:"Công thức cơ bản: v = s/t.",
+  fields:[
+   ["target","Cần tìm","select",[["v","Vận tốc v"],["s","Quãng đường s"],["t","Thời gian t"]]],
+   ["s","Quãng đường s (m)","number"],["t","Thời gian t (s)","number"],["v","Vận tốc v (m/s)","number"]
+  ],
+  calc:o=> o.target==="v"?{x:o.s/o.t,u:"m/s",f:"v = s / t"}:o.target==="s"?{x:o.v*o.t,u:"m",f:"s = v × t"}:{x:o.s/o.v,u:"s",f:"t = s / v"}
+ },
+ newton:{
+  title:"🧲 Định luật II Newton",desc:"F = m × a.",
+  fields:[["target","Cần tìm","select",[["F","Lực F"],["m","Khối lượng m"],["a","Gia tốc a"]]],["m","Khối lượng m (kg)","number"],["a","Gia tốc a (m/s²)","number"],["F","Lực F (N)","number"]],
+  calc:o=>o.target==="F"?{x:o.m*o.a,u:"N",f:"F = m × a"}:o.target==="m"?{x:o.F/o.a,u:"kg",f:"m = F / a"}:{x:o.F/o.m,u:"m/s²",f:"a = F / m"}
+ },
+ ohm:{
+  title:"💡 Định luật Ôm",desc:"U = I × R.",
+  fields:[["target","Cần tìm","select",[["U","Hiệu điện thế U"],["I","Cường độ dòng điện I"],["R","Điện trở R"]]],["U","Hiệu điện thế U (V)","number"],["I","Cường độ dòng điện I (A)","number"],["R","Điện trở R (Ω)","number"]],
+  calc:o=>o.target==="U"?{x:o.I*o.R,u:"V",f:"U = I × R"}:o.target==="I"?{x:o.U/o.R,u:"A",f:"I = U / R"}:{x:o.U/o.I,u:"Ω",f:"R = U / I"}
+ },
+ power:{
+  title:"🔋 Công suất điện",desc:"P = U × I.",
+  fields:[["target","Cần tìm","select",[["P","Công suất P"],["U","Hiệu điện thế U"],["I","Cường độ dòng điện I"]]],["P","Công suất P (W)","number"],["U","Hiệu điện thế U (V)","number"],["I","Cường độ dòng điện I (A)","number"]],
+  calc:o=>o.target==="P"?{x:o.U*o.I,u:"W",f:"P = U × I"}:o.target==="U"?{x:o.P/o.I,u:"V",f:"U = P / I"}:{x:o.P/o.U,u:"A",f:"I = P / U"}
+ },
+ work:{
+  title:"⚙️ Công – công suất cơ",desc:"Công cơ học A = F × s × cosα; công suất P = A/t.",
+  fields:[["target","Cần tìm","select",[["A","Công A"],["P","Công suất P"]]],["F","Lực F (N)","number"],["s","Quãng đường s (m)","number"],["angle","Góc α (độ)","number"],["t","Thời gian t (s)","number"]],
+  calc:o=>{let A=o.F*o.s*Math.cos(o.angle*Math.PI/180);return o.target==="A"?{x:A,u:"J",f:"A = F × s × cosα"}:{x:A/o.t,u:"W",f:"P = A / t; A = F × s × cosα"}}
+ },
+ density:{
+  title:"🧊 Khối lượng riêng",desc:"D = m/V.",
+  fields:[["target","Cần tìm","select",[["D","Khối lượng riêng D"],["m","Khối lượng m"],["V","Thể tích V"]]],["D","Khối lượng riêng D (kg/m³)","number"],["m","Khối lượng m (kg)","number"],["V","Thể tích V (m³)","number"]],
+  calc:o=>o.target==="D"?{x:o.m/o.V,u:"kg/m³",f:"D = m / V"}:o.target==="m"?{x:o.D*o.V,u:"kg",f:"m = D × V"}:{x:o.m/o.D,u:"m³",f:"V = m / D"}
+ },
+ pressure:{
+  title:"🌊 Áp suất",desc:"p = F/S.",
+  fields:[["target","Cần tìm","select",[["p","Áp suất p"],["F","Lực ép F"],["S","Diện tích S"]]],["p","Áp suất p (Pa)","number"],["F","Lực ép F (N)","number"],["S","Diện tích S (m²)","number"]],
+  calc:o=>o.target==="p"?{x:o.F/o.S,u:"Pa",f:"p = F / S"}:o.target==="F"?{x:o.p*o.S,u:"N",f:"F = p × S"}:{x:o.F/o.p,u:"m²",f:"S = F / p"}
+ },
+ kinetic:{
+  title:"🏃 Động năng",desc:"Wđ = 1/2 × m × v².",
+  fields:[["target","Cần tìm","select",[["W","Động năng Wđ"],["m","Khối lượng m"],["v","Vận tốc v"]]],["W","Động năng Wđ (J)","number"],["m","Khối lượng m (kg)","number"],["v","Vận tốc v (m/s)","number"]],
+  calc:o=>o.target==="W"?{x:.5*o.m*o.v**2,u:"J",f:"Wđ = 1/2 × m × v²"}:o.target==="m"?{x:2*o.W/o.v**2,u:"kg",f:"m = 2Wđ / v²"}:{x:Math.sqrt(2*o.W/o.m),u:"m/s",f:"v = √(2Wđ / m)"}
+ },
+ potential:{
+  title:"📐 Thế năng trọng trường",desc:"Wt = mgh.",
+  fields:[["target","Cần tìm","select",[["W","Thế năng Wt"],["m","Khối lượng m"],["h","Độ cao h"]]],["W","Thế năng Wt (J)","number"],["m","Khối lượng m (kg)","number"],["h","Độ cao h (m)","number"],["g","Gia tốc trọng trường g (m/s²)","number","9.8"]],
+  calc:o=>o.target==="W"?{x:o.m*o.g*o.h,u:"J",f:"Wt = mgh"}:o.target==="m"?{x:o.W/(o.g*o.h),u:"kg",f:"m = Wt/(gh)"}:{x:o.W/(o.m*o.g),u:"m",f:"h = Wt/(mg)"}
+ },
+ coulomb:{
+  title:"⚡ Lực Coulomb",desc:"F = k|q₁q₂|/r², với k ≈ 9×10⁹ N·m²/C².",
+  fields:[["target","Cần tìm","select",[["F","Lực điện F"],["r","Khoảng cách r"]]],["q1","Điện tích q₁ (C)","number"],["q2","Điện tích q₂ (C)","number"],["r","Khoảng cách r (m)","number"]],
+  calc:o=>{const k=9e9;return o.target==="F"?{x:k*Math.abs(o.q1*o.q2)/(o.r**2),u:"N",f:"F = k|q₁q₂| / r²"}:{x:Math.sqrt(k*Math.abs(o.q1*o.q2)/o.F),u:"m",f:"r = √(k|q₁q₂| / F)"}}
+ }
+};
+
+let current="motion";
+function selectType(type,btn){
+ current=type;
+ document.querySelectorAll(".subject-btn").forEach(b=>b.classList.remove("active"));
+ btn.classList.add("active");
+ render();
+}
+function render(){
+ const d=data[current];
+ document.getElementById("title").textContent=d.title;
+ document.getElementById("description").textContent=d.desc;
+ document.getElementById("result").style.display="none";
+ let html="";
+ d.fields.forEach(f=>{
+   html+=`<label>${f[1]}</label>`;
+   if(f[2]==="select"){
+     html+=`<select id="${f[0]}">${f[3].map(x=>`<option value="${x[0]}">${x[1]}</option>`).join("")}</select>`;
+   }else{
+     html+=`<input id="${f[0]}" type="number" step="any" placeholder="Nhập ${f[1].replace(/\s*\(.+?\)/,'')}" ${f[3]?`value="${f[3]}"`:''}>`;
+   }
+ });
+ document.getElementById("form").innerHTML=html;
+}
+function calculate(){
+ const d=data[current], o={};
+ d.fields.forEach(f=>{const el=document.getElementById(f[0]);o[f[0]]=f[2]==="select"?el.value:parseFloat(el.value)});
+ const target=o.target;
+ const required=d.fields.filter(f=>f[0]!==target && f[0]!=="target");
+ const missing=required.filter(f=>!Number.isFinite(o[f[0]])).map(f=>f[1]);
+ const box=document.getElementById("result");
+ box.style.display="block";
+ if(missing.length){
+   box.className="result error";
+   box.innerHTML=`<strong>⚠️ Thiếu dữ kiện</strong><p>Hãy nhập: ${missing.join(", ")}</p>`;
+   return;
+ }
+ try{
+   const r=d.calc(o);
+   if(!Number.isFinite(r.x)) throw new Error();
+   box.className="result";
+   box.innerHTML=`<div>✅ Kết quả</div><div class="value">${format(r.x)} ${r.u}</div><div class="formula">📌 ${r.f}</div>`;
+ }catch(e){
+   box.className="result error";box.innerHTML="<strong>⚠️ Không thể tính.</strong><p>Kiểm tra lại dữ kiện và đơn vị.</p>";
+ }
+}
+function format(n){
+ if(Math.abs(n)>=1e7 || (Math.abs(n)>0 && Math.abs(n)<1e-4)) return n.toExponential(5);
+ return Number(n.toFixed(6)).toString();
+}
+render();
+</script>
+</body>
+</html>
